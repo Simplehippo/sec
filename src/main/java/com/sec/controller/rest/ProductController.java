@@ -1,7 +1,7 @@
 package com.sec.controller.rest;
 
 import com.sec.common.Resp;
-import com.sec.service.protal.ProductService;
+import com.sec.service.portal.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

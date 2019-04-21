@@ -1,4 +1,4 @@
-package com.sec.service.protal;
+package com.sec.service.portal;
 
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;

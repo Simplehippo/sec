@@ -3,7 +3,7 @@ package com.sec.advice;
 import com.sec.common.Codes;
 import com.sec.common.Resp;
 import com.sec.exception.FlowLimitException;
-import com.sec.exception.MyMailException;
+import com.sec.exception.EmailException;
 import com.sec.exception.NoLoginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,10 +58,10 @@ public class GlobalExceptionHandler {
      * @param e
      * @return
      */
-    @ExceptionHandler(value = MyMailException.class)
+    @ExceptionHandler(value = EmailException.class)
     @ResponseBody
-    public Resp mailException(MyMailException e) {
-        log.info("<!>--> MyMailException");
+    public Resp emailException(EmailException e) {
+        log.info("<!>--> EmailException");
         String msg = "邮件发送失败!";
         return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), msg);
     }

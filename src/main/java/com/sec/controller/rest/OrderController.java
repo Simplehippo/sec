@@ -2,7 +2,7 @@ package com.sec.controller.rest;
 
 import com.sec.common.Const;
 import com.sec.common.Resp;
-import com.sec.service.protal.OrderService;
+import com.sec.service.portal.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

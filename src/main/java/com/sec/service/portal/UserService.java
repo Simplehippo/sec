@@ -1,4 +1,4 @@
-package com.sec.service.protal;
+package com.sec.service.portal;
 
 import com.sec.common.Codes;
 import com.sec.common.Const;

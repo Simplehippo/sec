@@ -1,4 +1,4 @@
-package com.sec.service.protal;
+package com.sec.service.portal;
 
 import com.google.common.collect.Maps;
 import com.sec.async.EventModel;

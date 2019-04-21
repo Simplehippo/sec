@@ -1,6 +1,6 @@
 package com.sec.service.func;
 
-import com.sec.exception.MyMailException;
+import com.sec.exception.EmailException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -40,7 +40,7 @@ public class MailService {
             mainMessage.setText(text);
             mailSender.send(mainMessage);
         } catch (Exception e) {
-            throw new MyMailException();
+            throw new EmailException();
         }
     }
 
@@ -57,7 +57,7 @@ public class MailService {
 
             mailSender.send(message);
         } catch (Exception e) {
-            throw new MyMailException();
+            throw new EmailException();
         }
     }
 

@@ -4,7 +4,7 @@ import com.sec.async.EventHandler;
 import com.sec.async.EventModel;
 import com.sec.async.EventType;
 import com.sec.service.func.RedisService;
-import com.sec.service.protal.OrderService;
+import com.sec.service.portal.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
