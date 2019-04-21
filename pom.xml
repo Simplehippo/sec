@@ -178,6 +178,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- 打包外部的jar包需要在此配置为true -->
                     <includeSystemScope>true</includeSystemScope>
                 </configuration>
             </plugin>
@@ -192,7 +193,7 @@
                     <overwrite>true</overwrite>
                 </configuration>
                 <dependencies>
-                    <!-- 配置这个依赖是为了在配置MG(generatorConfig)的时候可以不用配置classPathEntry属性 -->
+                    <!-- 配置这个依赖是为了在配置generatorConfig的时候可以不用配置classPathEntry属性 -->
                     <dependency>
                         <groupId>mysql</groupId>
                         <artifactId>mysql-connector-java</artifactId>
@@ -200,19 +201,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-
-            <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-compiler-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<source>1.8</source>-->
-                    <!--<target>1.8</target>-->
-                    <!--<encoding>UTF-8</encoding>-->
-                    <!--<compilerArguments>-->
-                        <!--<extdirs>${project.basedir}/src/main/resources/lib</extdirs>-->
-                    <!--</compilerArguments>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
         </plugins>
     </build>
 
