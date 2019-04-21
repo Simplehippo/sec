@@ -220,4 +220,28 @@
     from sec_order
     where user_id = #{userId}
   </select>
+
+  <select id="selectByUserIdProductId" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from sec_order
+    where user_id = #{userId}
+    and product_id = #{productId}
+    and status = 1
+    order by id desc
+    limit 1
+  </select>
+
+  <select id="selectByUserIdProductIdAndTime" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from sec_order
+    where user_id = #{userId}
+    and product_id = #{productId}
+    and status = 1
+    and create_time &gt; #{startTime}
+    and create_time &lt; #{endTime}
+    order by id desc
+    limit 1
+  </select>
 </mapper>

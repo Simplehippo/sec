@@ -3,6 +3,7 @@ package com.sec.dao;
 import com.sec.pojo.Order;
 import org.apache.ibatis.annotations.Param;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 public interface OrderMapper {
@@ -33,4 +34,12 @@ public interface OrderMapper {
                                        @Param("pageSize") Integer pageSize);
 
     Integer countByUserId(Integer userId);
+
+    Order selectByUserIdProductId(@Param("userId") Integer userId,
+                                  @Param("productId") Integer productId);
+
+    Order selectByUserIdProductIdAndTime(@Param("userId") Integer userId,
+                                         @Param("productId") Integer productId,
+                                         @Param("startTime") Timestamp startTime,
+                                         @Param("endTime") Timestamp endTime);
 }

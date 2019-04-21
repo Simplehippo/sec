@@ -152,6 +152,39 @@ public class OrderService {
         return Resp.success();
     }
 
+    /**
+     * 只在当前正在参与秒杀的时候使用
+     * 用来轮询获取订单信息, 获取到了说明订单已经生成成功了
+     * @param productId
+     * @return
+     */
+    public Resp pollOrderDetail(Integer productId) {
+        // 得到登录用户id
+        User loginUser = userService.getUserByToken();
+        Integer userId = loginUser.getId();
+
+        // 拿出缓存的商品
+        Product product = redisService.get(RedisService.SECKILL_PRODUCT_PREFIX, productId.toString(), Product.class);
+        Timestamp startTime = product.getStartTime();
+        Timestamp endTime = product.getEndTime();
+
+        // 考虑到同一个商品可能会参与多次秒杀活动
+        // 所以查出订单详情需要保证:
+        // 1. user_id = userId
+        // 2. product_id = productId
+        // 3. status = 1           // 区分未支付订单和其他订单
+        // 4. create_time > startTime  // 用来与过去的秒杀活动区分
+        // 5. create_time < endTime    // 用来与过去的秒杀活动区分
+        // 保证订单状态是未支付状态 status = 1, 同时注意避免横向越权
+        // 正常情况下同一个商品一个人只能秒杀一个, 去掉中途取消的订单干扰即可, 保证拿到的订单是唯一的
+        Order order = orderMapper.selectByUserIdProductIdAndTime(userId, productId, startTime, endTime);
+        if(order == null) {
+            return Resp.error(Codes.ORDER_ERROR.getCode(), "没有此订单");
+        }
+
+        return Resp.success(order);
+    }
+
     public Resp getOrderDetail(Long orderNo) {
         // 得到登录用户id
         User loginUser = userService.getUserByToken();
@@ -257,7 +290,7 @@ public class OrderService {
         resultMap.put("orderNo", outTradeNo);
 
         // (必填) 订单标题，粗略描述用户的支付目的。如“xxx品牌xxx门店当面付扫码消费”
-        String subject = new StringBuilder().append("扫码支付,订单号: ").append(outTradeNo).toString();
+        String subject = new StringBuilder().append("欢迎参与秒杀, 订单号: ").append(outTradeNo).toString();
 
         // (必填) 订单总金额，单位为元，不能超过1亿元
         // 如果同时传入了【打折金额】,【不可打折金额】,【订单总金额】三者,则必须满足如下条件:【订单总金额】=【打折金额】+【不可打折金额】
@@ -293,7 +326,7 @@ public class OrderService {
         GoodsDetail good = GoodsDetail.newInstance(
                 product.getId().toString(),
                 product.getName(),
-                product.getPrice().longValue(),
+                product.getPrice().multiply(new BigDecimal(100)).longValue(),  // 单位是分, 所以要乘100
                 1
         );
         goodsDetailList.add(good);
@@ -408,8 +441,10 @@ public class OrderService {
         // 判断回调状态, 现在只考虑支付成功的回调状态, 支付中状态不太重要, 暂时不考虑
         if(StringUtils.equalsIgnoreCase(Const.AlipayCallback.TRADE_STATUS_TRADE_SUCCESS, tradeStatus)) {
             // 是支付成功的回调, 执行具体业务
-            order.setPaymentTime(new Timestamp(System.currentTimeMillis()));
             order.setStatus(Const.OrderStatus.PAID.getCode());
+            order.setPaymentTime(new Timestamp(System.currentTimeMillis()));
+            order.setFinishTime(new Timestamp(System.currentTimeMillis()));
+            order.setUpdateTime(new Timestamp(System.currentTimeMillis()));
             orderMapper.updateByPrimaryKeySelective(order);
 
             // 新增支付条例
@@ -418,6 +453,8 @@ public class OrderService {
             payInfo.setOrderNo(order.getOrderNo());
             payInfo.setPlatformNumber(tradeNo);
             payInfo.setPlatformStatus(tradeStatus);
+            payInfo.setCreateTime(new Timestamp(System.currentTimeMillis()));
+            payInfo.setUpdateTime(new Timestamp(System.currentTimeMillis()));
             payInfoMapper.insertSelective(payInfo);
 
             // todo 生成成功,我们要减少相应商品的库存 order.getProductId()

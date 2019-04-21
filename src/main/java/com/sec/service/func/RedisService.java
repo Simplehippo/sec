@@ -29,6 +29,8 @@ public class RedisService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+
+
     public <T> T get(String key, Class<T> clazz) {
         Object obj = redisTemplate.opsForValue().get(key);
         return (T)obj;
@@ -38,6 +40,8 @@ public class RedisService {
         Object obj = redisTemplate.opsForValue().get(prefix + key);
         return (T)obj;
     }
+
+
 
     public void set(String key, Object value) {
         redisTemplate.opsForValue().set(key, value, DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
@@ -55,6 +59,22 @@ public class RedisService {
         redisTemplate.opsForValue().set(prefix + key, value, time, unit);
     }
 
+
+
+    public void expire(String prefix, String key) {
+        redisTemplate.expire(prefix + key, DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
+    }
+
+    public void expire(String prefix, String key, int second) {
+        redisTemplate.expire(prefix + key, second, TimeUnit.SECONDS);
+    }
+
+    public void expire(String prefix, String key, int time, TimeUnit unit) {
+        redisTemplate.expire(prefix + key, time, unit);
+    }
+
+
+
     public void del(String key) {
         redisTemplate.delete(key);
     }
@@ -62,6 +82,7 @@ public class RedisService {
     public void del(String prefix, String key) {
         redisTemplate.delete(prefix + key);
     }
+
 
 
     public Long desr(String prefix, String key) {

@@ -24,7 +24,7 @@ import java.util.List;
 @Configuration
 public class WebConfig extends WebMvcConfigurationSupport {
     // 配置日志
-    private static final Logger logger = LoggerFactory.getLogger(WebConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(WebConfig.class);
 
     @Autowired
     private UserInterceptor userInterceptor;

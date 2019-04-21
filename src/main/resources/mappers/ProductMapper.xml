@@ -223,7 +223,9 @@
 
   <update id="decrementStockById">
     update sec_product
-    set stock = stock - 1
+    set
+    stock = stock - 1,
+    sale = sale + 1
     where id = #{productId}
     and stock > 0
   </update>

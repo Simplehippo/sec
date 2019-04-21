@@ -17,6 +17,11 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    @RequestMapping("/poll")
+    public Resp poll(Integer productId){
+        return orderService.pollOrderDetail(productId);
+    }
+
     @RequestMapping("/detail")
     public Resp detail(Long orderNo){
         return orderService.getOrderDetail(orderNo);

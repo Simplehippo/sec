@@ -39,7 +39,12 @@ public class UserService {
             throw new NoLoginException();
         }
 
-        return redisService.get(RedisService.USER_TOKEN_PREFIX, tokenVal, User.class);
+        User loginUser = redisService.get(RedisService.USER_TOKEN_PREFIX, tokenVal, User.class);
+        if(loginUser == null) {
+            throw new NoLoginException();
+        }
+
+        return loginUser;
     }
 
     public Resp sendCode(User user) {
