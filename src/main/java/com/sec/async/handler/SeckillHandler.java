@@ -45,11 +45,12 @@ public class SeckillHandler implements EventHandler {
             new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable r) {
-                    Thread thread = new Thread(r, "async handler thread - " + threadNo.getAndIncrement());
+                    Thread thread = new Thread(r, "seckill handler thread - " + threadNo.getAndIncrement());
                     return thread;
                 }
             },
-            new ThreadPoolExecutor.AbortPolicy());
+            new ThreadPoolExecutor.AbortPolicy()
+    );
 
     @Override
     public void doHandle(EventModel model) {
