@@ -40,6 +40,7 @@ public interface OrderMapper {
 
     Order selectByUserIdProductIdAndTime(@Param("userId") Integer userId,
                                          @Param("productId") Integer productId,
+                                         @Param("status") Integer status,
                                          @Param("startTime") Timestamp startTime,
                                          @Param("endTime") Timestamp endTime);
 }

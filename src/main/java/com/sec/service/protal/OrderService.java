@@ -169,15 +169,21 @@ public class OrderService {
         Timestamp endTime = product.getEndTime();
 
         // 考虑到同一个商品可能会参与多次秒杀活动
-        // 所以查出订单详情需要保证:
-        // 1. user_id = userId
-        // 2. product_id = productId
-        // 3. status = 1           // 区分未支付订单和其他订单
-        // 4. create_time > startTime  // 用来与过去的秒杀活动区分
-        // 5. create_time < endTime    // 用来与过去的秒杀活动区分
-        // 保证订单状态是未支付状态 status = 1, 同时注意避免横向越权
+        // 查出订单详情需要保证:
+        // 1. user_id = userId                                          // 避免横向越权
+        // 2. product_id = productId                                    // 具体的商品id
+        // 3. status = Const.OrderStatus.NO_PAY.getCode()               // 区分未支付订单和其他订单
+        // 4. create_time > startTime                                   // 用来与过去的秒杀活动区分
+        // 5. create_time < endTime                                     // 用来与过去的秒杀活动区分
         // 正常情况下同一个商品一个人只能秒杀一个, 去掉中途取消的订单干扰即可, 保证拿到的订单是唯一的
-        Order order = orderMapper.selectByUserIdProductIdAndTime(userId, productId, startTime, endTime);
+        // 考虑到检索效率利用上主键索引 order by id desc
+        Order order = orderMapper.selectByUserIdProductIdAndTime(
+                userId,
+                productId,
+                Const.OrderStatus.NO_PAY.getCode(),
+                startTime,
+                endTime
+        );
         if(order == null) {
             return Resp.error(Codes.ORDER_ERROR.getCode(), "没有此订单");
         }
