@@ -23,11 +23,13 @@ public interface ShippingMapper {
 
 
 
-    int deleteByUserIdShippingId(@Param("userId") Integer userId, @Param("shippingId") Integer shippingId);
+    int deleteByUserIdShippingId(@Param("userId") Integer userId,
+                                 @Param("shippingId") Integer shippingId);
 
     int updateByUserIdShippingSelective(Shipping shipping);
 
-    Shipping selectByUserIdShippingId(@Param("userId") Integer userId, @Param("shippingId") Integer shippingId);
+    Shipping selectByUserIdShippingId(@Param("userId") Integer userId,
+                                      @Param("shippingId") Integer shippingId);
 
-    List<Shipping> selectByUserId(@Param("userId")Integer userId);
+    List<Shipping> selectByUserId(Integer userId);
 }

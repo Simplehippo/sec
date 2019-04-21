@@ -4,14 +4,6 @@ public class Const {
 
     public static final String COOKIE_TOKEN_NAME = "token";
 
-    public interface  AlipayCallback{
-        String TRADE_STATUS_WAIT_BUYER_PAY = "WAIT_BUYER_PAY";
-        String TRADE_STATUS_TRADE_SUCCESS = "TRADE_SUCCESS";
-
-        String RESPONSE_SUCCESS = "success";
-        String RESPONSE_FAILED = "failed";
-    }
-
     public enum OrderStatus {
         CANCELED(0, "已取消"),
         NO_PAY(1, "未支付"),
@@ -54,4 +46,11 @@ public class Const {
         }
     }
 
+    public interface  AlipayCallback{
+        String TRADE_STATUS_WAIT_BUYER_PAY = "WAIT_BUYER_PAY";
+        String TRADE_STATUS_TRADE_SUCCESS = "TRADE_SUCCESS";
+
+        String RESPONSE_SUCCESS = "success";
+        String RESPONSE_FAILED = "failed";
+    }
 }

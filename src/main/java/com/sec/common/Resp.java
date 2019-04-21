@@ -1,13 +1,7 @@
 package com.sec.common;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
 import java.io.Serializable;
 
-//没有值的(null)的不序列化
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Resp<T> implements Serializable {
     private int code;
     private boolean success;

@@ -47,8 +47,8 @@ public class WebConfig extends WebMvcConfigurationSupport {
     // 静态资源支持
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        //需要配置1：----------- 需要告知系统，这是要被当成静态文件的！
-        //第一个方法设置访问路径前缀，第二个方法设置资源路径
+        // 需要配置1：----------- 需要告知系统，这是要被当成静态文件的！
+        // 第一个方法设置访问路径前缀，第二个方法设置资源路径
         registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
     }
 
@@ -66,27 +66,27 @@ public class WebConfig extends WebMvcConfigurationSupport {
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
-        //序列化配置
+        // 序列化配置
         FastJsonConfig config = new FastJsonConfig();
         config.setSerializerFeatures(
-//                QuoteFieldNames,// 输出key时是否使用双引号
-//                WriteNullListAsEmpty,// 是否输出值为null的字段
-//                WriteNullNumberAsZero,//数值字段如果为null,输出为0,而非null
-//                WriteNullStringAsEmpty,//字符类型字段如果为null,输出为"",而非null
-//                WriteNullBooleanAsFalse,//Boolean字段如果为null,输出为false,而非null
-//                WriteNullStringAsEmpty,// null String不输出
-//                WriteMapNullValue,//null String也要输出
-//                WriteDateUseDateFormat,//Date的日期转换器
-//                DisableCircularReferenceDetect,//禁止循环引用
-//                WriteNullListAsEmpty//List字段如果为null,输出为[],而非null
+//                QuoteFieldNames,                  // 输出key时是否使用双引号
+//                WriteNullListAsEmpty,             // 是否输出值为null的字段
+//                WriteNullNumberAsZero,            // 数值字段如果为null,输出为0,而非null
+//                WriteNullStringAsEmpty,           //字符类型字段如果为null,输出为"",而非null
+//                WriteNullBooleanAsFalse,          //Boolean字段如果为null,输出为false,而非null
+//                WriteNullStringAsEmpty,           // null String不输出
+//                WriteMapNullValue,                //null String也要输出
+//                WriteDateUseDateFormat,           //Date的日期转换器
+//                DisableCircularReferenceDetect,   //禁止循环引用
+//                WriteNullListAsEmpty              //List字段如果为null,输出为[],而非null
         );
         // 处理中文乱码问题
         List<MediaType> fastMediaTypes = new ArrayList<>();
         fastMediaTypes.add(MediaType.APPLICATION_JSON_UTF8);
         converter.setSupportedMediaTypes(fastMediaTypes);
-        // 3.在convert中添加配置信息
+        // 在convert中添加配置信息
         converter.setFastJsonConfig(config);
-        // 4.将convert添加到converters当中
+        // 将convert添加到converters当中
         converters.add(converter);
     }
 }

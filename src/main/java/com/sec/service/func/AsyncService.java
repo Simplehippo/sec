@@ -20,9 +20,11 @@ public class AsyncService {
     private AtomicInteger processedCount = new AtomicInteger(0);
 
     public void put(EventModel model) {
-        log.info("<!>--> AsyncService model-type: {}, orderNum: {}",
+        log.info(
+                "<!>--> AsyncService model-type: {}, orderNum: {}",
                 model.getType().name(),
-                processedCount.getAndIncrement());
+                processedCount.getAndIncrement()
+        );
 
         eventLoop.putEvent(model);
     }

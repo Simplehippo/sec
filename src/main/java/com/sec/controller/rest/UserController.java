@@ -35,9 +35,6 @@ public class UserController {
     @RequestMapping("/info")
     public Resp info() {
         User loginUser = userService.getUserByToken();
-        if(loginUser == null) {
-            return Resp.error(Codes.NO_LOGIN);
-        }
         return Resp.success(loginUser);
     }
 
