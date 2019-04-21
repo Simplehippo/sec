@@ -16,7 +16,6 @@ public class RedisService {
     public static final String USER_REGISTER_CODE_PREFIX = "user-register-code-";
 
     // 秒杀相关
-    public static final String SECKILL_ERROR_ID_PREFIX = "seckill-error-id-";
     public static final String SECKILL_PRODUCT_PREFIX = "seckill-product-";
     public static final String SECKILL_STOCK_PREFIX = "seckill-stock-";
     public static final String SECKILL_EXPOSE_PREFIX = "seckill-expose-";

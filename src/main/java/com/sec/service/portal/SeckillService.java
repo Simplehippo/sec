@@ -41,6 +41,13 @@ public class SeckillService {
      */
     private ReentrantLock lock = new ReentrantLock();
 
+
+    /**
+     * 标识无效的productId, 用于解决缓存穿透
+     */
+    private static final int INVALID_PRODUCT_ID = -1;
+
+
     /**
      * 1. 用来暴露秒杀接口
      * 2. 把在秒杀中需要的数据在redis提前缓存好
@@ -53,12 +60,6 @@ public class SeckillService {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "商品id不能为空");
         }
 
-        // 降低缓存穿透的风险
-        String errorId = redisService.get(RedisService.SECKILL_ERROR_ID_PREFIX, String.valueOf(productId), String.class);
-        if(errorId != null) {
-            return Resp.error(Codes.SERVER_ERR.getCode(), "无此商品");
-        }
-
         // todo 这里redis最好定时提前预热一下数据, 避开缓存击穿的风险
         // todo 预热同时也要避免缓存雪崩的风险, 可以设置不同的过期时间缓解一下
         // 先尝试从Redis中拿产品库存
@@ -68,12 +69,6 @@ public class SeckillService {
             // todo 未来需要改成redis分布式锁来让多进程之间也保证同步. 这里先简单同步一下
             lock.lock();
             try{
-                // 再次检查, 降低缓存穿透的风险
-                errorId = redisService.get(RedisService.SECKILL_ERROR_ID_PREFIX, String.valueOf(productId), String.class);
-                if(errorId != null) {
-                    return Resp.error(Codes.SERVER_ERR.getCode(), "无此商品");
-                }
-
                 // 再查一次, 避免重复写入redis
                 product = redisService.get(RedisService.SECKILL_PRODUCT_PREFIX, String.valueOf(productId), Product.class);
                 if(product == null) {
@@ -85,15 +80,22 @@ public class SeckillService {
                         redisService.set(RedisService.SECKILL_STOCK_PREFIX, String.valueOf(productId), product.getStock());
                     }
                     // 数据库里没有, 可能发生缓存穿透, 需要注意!!
-                    // 处理办法: 仍然放入缓存, 加一个特殊的前缀, 并且设置一个比较短的有效时间, 这里我设置30秒
+                    // 处理办法: 仍然放入缓存, 但是需要设置一个比较短的有效时间, 这里我设置30秒
                     else {
-                        redisService.set(RedisService.SECKILL_ERROR_ID_PREFIX, String.valueOf(productId), "error product Id", 30);
-                        return Resp.error(Codes.SERVER_ERR.getCode(), "无此商品");
+                        // 放入一个特殊的商品来标识, 这里我放一个主键是INVALID_PRODUCT_ID的商品代表是无效的productId
+                        Product invalidProduct = new Product();
+                        invalidProduct.setId(INVALID_PRODUCT_ID);
+                        redisService.set(RedisService.SECKILL_PRODUCT_PREFIX, String.valueOf(productId), invalidProduct, 30);
                     }
                 }
             } finally {
                 lock.unlock();
             }
+        }
+
+        // 缓解缓存穿透的风险
+        if(product.getId() == INVALID_PRODUCT_ID) {
+            return Resp.error(Codes.SERVER_ERR.getCode(), "无此商品");
         }
 
         // 判断秒杀是否开始
@@ -109,6 +111,7 @@ public class SeckillService {
         String md5 = redisService.get(RedisService.SECKILL_EXPOSE_PREFIX, String.valueOf(productId), String.class);
         if(md5 == null) {
             // 没有就生成一个放入redis, 注意并发
+            // todo 这里先简单同步一下
             lock.lock();
             try{
                 // 再查一次, 避免重复写入redis
