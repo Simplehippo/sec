@@ -138,8 +138,7 @@ public class OrderService {
 
     public Resp updateOrder(Long orderNo, Integer shippingId) {
         // 得到登录用户id
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         // 查出订单详情, 注意避免横向越权
         Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
@@ -168,8 +167,7 @@ public class OrderService {
      */
     public Resp pollOrderDetail(Integer productId) {
         // 得到登录用户id
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         // 查看缓存中是否存在订单信息
         String orderKey = RedisService.SECKILL_ORDER_PREFIX + productId.toString();
@@ -220,8 +218,7 @@ public class OrderService {
 
     public Resp getOrderDetail(Long orderNo) {
         // 得到登录用户id
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         // 查出订单详情, 注意避免横向越权
         Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
@@ -234,8 +231,7 @@ public class OrderService {
 
     public Resp getOrderList(Integer pageNum, Integer pageSize) {
         // 得到登录用户id
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         // 查出订单信息即可, 注意带上分页
         Integer offset = (pageNum - 1) / pageSize;
@@ -251,8 +247,7 @@ public class OrderService {
 
     public Resp cancel(Long orderNo) {
         // 得到登录用户id
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         // 查出订单详情, 注意避免横向越权
         Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);
@@ -286,8 +281,7 @@ public class OrderService {
 
     public Resp pay(Long orderNo) {
         // 查出登录用户信息
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
         if(orderNo == null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "参数错误!");
         }

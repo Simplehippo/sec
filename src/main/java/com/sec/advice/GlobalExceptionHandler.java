@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = FlowLimitException.class)
     @ResponseBody
     public Resp flowLimitException(FlowLimitException e) {
-        log.info("<!>--> FlowLimitException");
+        // log.info("<!>--> FlowLimitException");
         return Resp.error(Codes.FLOW_LIMIT);
     }
 

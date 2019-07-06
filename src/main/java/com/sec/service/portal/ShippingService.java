@@ -22,8 +22,7 @@ public class ShippingService {
     private UserService userService;
 
     public Resp add(Shipping shipping) {
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         if(userId == null || shipping == null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "参数错误!");
@@ -41,8 +40,7 @@ public class ShippingService {
     }
 
     public Resp delete(Integer shippingId) {
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         if(userId == null || shippingId == null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "参数错误!");
@@ -57,8 +55,7 @@ public class ShippingService {
     }
 
     public Resp update(Shipping shipping) {
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         if(userId == null || shipping == null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "参数错误!");
@@ -74,8 +71,7 @@ public class ShippingService {
     }
 
     public Resp select(Integer shippingId) {
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         if(userId == null || shippingId == null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "参数错误!");
@@ -90,8 +86,7 @@ public class ShippingService {
     }
 
     public Resp list(Integer pageNum, Integer pageSize) {
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         Integer offset = (pageNum - 1) * pageSize;
         List<Shipping> shippingList = shippingMapper.selectAllByUserIdAndPageInfo(userId, offset, pageSize);

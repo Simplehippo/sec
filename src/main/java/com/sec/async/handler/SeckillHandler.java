@@ -85,6 +85,10 @@ public class SeckillHandler implements EventHandler {
                     // 将用户成功下单信息删除
                     String successKey = RedisService.SECKILL_SUCCESS_PREFIX + productId.toString();
                     redisService.srem(successKey, userId.toString());
+                    // 将缓存中可能的订单信息删除
+                    String orderKey = RedisService.SECKILL_ORDER_PREFIX + productId;
+                    String hk = String.valueOf(userId);
+                    redisService.hdel(orderKey, hk);
 
                     // 打印失败日志
                     log.info("创建订单失败! userId: {}, productId: {}", userId, productId);
@@ -93,6 +97,7 @@ public class SeckillHandler implements EventHandler {
                 }
             }
         };
+
         executor.execute(task);
     }
 

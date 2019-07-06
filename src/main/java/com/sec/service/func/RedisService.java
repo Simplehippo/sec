@@ -29,7 +29,9 @@ public class RedisService {
     public static final String SECKILL_ORDER_PREFIX = "seckill:order:";
 
     // 限流
-    public static final String FLOW_LIMIT_PREFIX = "flow:limit:prefix:";
+    public static final String FLOW_LIMIT_PREFIX = "flow:limit:";
+    public static final String FLOW_LIMIT_IP_PREFIX = "flow:limit:ip:";
+    public static final String FLOW_LIMIT_USER_PREFIX = "flow:limit:user:";
 
 
     @Autowired
@@ -45,10 +47,6 @@ public class RedisService {
         return (T)obj;
     }
 
-    public <T> T get(String prefix, String key, Class<T> clazz) {
-        return get(prefix + key, clazz);
-    }
-
     public void set(String key, Object value, long time, TimeUnit unit) {
         redisTemplate.opsForValue().set(key, value, time, unit);
     }
@@ -61,20 +59,16 @@ public class RedisService {
         set(key, value, second, TimeUnit.SECONDS);
     }
 
-    public void set(String prefix, String key, Object value) {
-        set(prefix + key, value, DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
+    public boolean setnx(String key, Object value) {
+        return setnx(key, value, DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
     }
 
-    public void setnx(String key, Object value) {
-        setnx(key, value, DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
+    public boolean setnx(String key, Object value, long second) {
+        return setnx(key, value, second, TimeUnit.SECONDS);
     }
 
-    public void setnx(String key, Object value, long second) {
-        setnx(key, value, second, TimeUnit.SECONDS);
-    }
-
-    public void setnx(String key, Object value, long time, TimeUnit unit) {
-        redisTemplate.opsForValue().setIfAbsent(key, value, time, unit);
+    public boolean setnx(String key, Object value, long time, TimeUnit unit) {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, time, unit);
     }
 
     public Long decr(String key) {
@@ -91,21 +85,14 @@ public class RedisService {
 
 
 
+
     public void hmput(String key, Map value) {
         redisTemplate.opsForHash().putAll(key, value);
-    }
-
-    public void hmput(String prefix, String key, Map value) {
-        hmput(prefix + key, value);
     }
 
     public <T> T hmget(String key, Class<T> clazz) {
         Map<String, Object> entries = redisTemplate.opsForHash().entries(key);
         return ConvertUtil.mapToObject(entries, clazz);
-    }
-
-    public <T> T hmget(String prefix, String key, Class<T> clazz) {
-        return hmget(prefix + key, clazz);
     }
 
     public boolean hmexist(String key) {
@@ -124,6 +111,10 @@ public class RedisService {
         return (T)redisTemplate.opsForHash().get(key, hk);
     }
 
+    public boolean hdel(String key, String hk) {
+        return redisTemplate.opsForHash().delete(key, hk) != 0;
+    }
+
     public long hdecr(String key, String hk) {
         return redisTemplate.opsForHash().increment(key, hk, -1);
     }
@@ -131,6 +122,8 @@ public class RedisService {
     public long hincr(String key, String hk) {
         return redisTemplate.opsForHash().increment(key, hk, 1);
     }
+
+
 
 
 
@@ -153,7 +146,9 @@ public class RedisService {
 
 
 
-
+    public boolean haskey(String key) {
+        return redisTemplate.hasKey(key);
+    }
 
     public void expire(String key) {
         expire(key, DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
@@ -174,10 +169,6 @@ public class RedisService {
 
     public void del(String key) {
         redisTemplate.delete(key);
-    }
-
-    public void del(String prefix, String key) {
-        del(prefix + key);
     }
 
 }

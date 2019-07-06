@@ -38,21 +38,26 @@ public class UserService {
 
     public User getUserByToken() {
         String tokenVal = ThreadLocalUtil.getThreadLocalToken();
-        if(tokenVal == null) {
+        if (tokenVal == null) {
             throw new NoLoginException();
         }
 
-        User loginUser = redisService.get(RedisService.USER_TOKEN_PREFIX, tokenVal, User.class);
-        if(loginUser == null) {
+        String key = RedisService.USER_TOKEN_PREFIX + tokenVal;
+        User loginUser = redisService.get(key, User.class);
+        if (loginUser == null) {
             throw new NoLoginException();
         }
 
         return loginUser;
     }
 
+    public Integer getUserIdByToken() {
+        return this.getUserByToken().getId();
+    }
+
     public Resp sendCode(User user) {
         // 注册密码校验
-        if(StringUtils.isBlank(user.getPassword())) {
+        if (StringUtils.isBlank(user.getPassword())) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "注册密码不能是空");
         }
 
@@ -60,22 +65,23 @@ public class UserService {
         String email = user.getEmail();
 
         // 避免重复发送验证码
-        String oldCode = redisService.get(RedisService.USER_REGISTER_CODE_PREFIX, email, String.class);
-        if(StringUtils.isNotBlank(oldCode)) {
+        String key = RedisService.USER_REGISTER_CODE_PREFIX + email;
+        String oldCode = redisService.get(key, String.class);
+        if (StringUtils.isNotBlank(oldCode)) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), CODE_EXPIRE + "秒内不要重复发送验证码");
         }
 
         // 先查询数据库
         User dbUser = userMapper.selectByEmail(email);
         // 数据库里已经存在了用户
-        if(dbUser != null) {
+        if (dbUser != null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "该用户已经存在了");
         }
 
         // todo 放入redis
         String randomCode = this.randomCode();
-        String key = RedisService.USER_REGISTER_CODE_PREFIX + email;
-        redisService.set(key, randomCode, CODE_EXPIRE);
+        String codeKey = RedisService.USER_REGISTER_CODE_PREFIX + email;
+        redisService.set(codeKey, randomCode, CODE_EXPIRE);
 
         // todo 发送验证码
         String title = "欢迎注册";
@@ -87,12 +93,12 @@ public class UserService {
 
     public Resp register(User user, String code) {
         // 注册密码校验
-        if(StringUtils.isBlank(user.getPassword())) {
+        if (StringUtils.isBlank(user.getPassword())) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "注册密码不能是空");
         }
 
         // 验证码校验
-        if(StringUtils.isBlank(code)) {
+        if (StringUtils.isBlank(code)) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "验证码不能是空");
         }
 
@@ -102,13 +108,14 @@ public class UserService {
         // 先查询数据库
         User dbUser = userMapper.selectByEmail(email);
         // 数据库里已经存在了用户
-        if(dbUser != null) {
+        if (dbUser != null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "该用户已经存在了");
         }
 
         // todo 从redis中取出验证码校验
-        String redisDbCode = redisService.get(RedisService.USER_REGISTER_CODE_PREFIX, email, String.class);
-        if(!StringUtils.equalsIgnoreCase(redisDbCode, code)) {
+        String codeKey = RedisService.USER_REGISTER_CODE_PREFIX + email;
+        String redisDbCode = redisService.get(codeKey, String.class);
+        if (!StringUtils.equalsIgnoreCase(redisDbCode, code)) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "验证码错误");
         }
 
@@ -126,7 +133,7 @@ public class UserService {
 
         // 插入数据库
         int result = userMapper.insertSelective(newUser);
-        if(result <= 0) {
+        if (result <= 0) {
             return Resp.error(Codes.ERROR.getCode(), "数据库未知错误");
         }
 
@@ -134,7 +141,7 @@ public class UserService {
     }
 
     public Resp login(User user) {
-        if(user == null || StringUtils.isBlank(user.getEmail()) || StringUtils.isBlank(user.getPassword())) {
+        if (user == null || StringUtils.isBlank(user.getEmail()) || StringUtils.isBlank(user.getPassword())) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT);
         }
 
@@ -144,12 +151,12 @@ public class UserService {
 
         User dbUser = userMapper.selectByEmail(email);
         // 校验用户
-        if(dbUser == null) {
+        if (dbUser == null) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "没有此用户");
         }
 
         // 校验密码
-        if(!MD5Util.verify(password, dbUser.getPassword())) {
+        if (!MD5Util.verify(password, dbUser.getPassword())) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "密码错误");
         }
 
@@ -166,8 +173,9 @@ public class UserService {
         // 写入redis, 这里暂时允许多浏览器登录, 但是一个浏览器只保留一个token
         String token = UUID.randomUUID().toString();
         String oldToken = ThreadLocalUtil.getThreadLocalToken();
-        if(oldToken != null) {
-            redisService.del(RedisService.USER_TOKEN_PREFIX, oldToken);
+        if (oldToken != null) {
+            String tokenKey = RedisService.USER_TOKEN_PREFIX + oldToken;
+            redisService.del(tokenKey);
         }
         String key = RedisService.USER_TOKEN_PREFIX + token;
         redisService.set(key, dbUser);
@@ -177,7 +185,7 @@ public class UserService {
         cookie.setHttpOnly(true);
         cookie.setMaxAge(RedisService.DEFAULT_EXPIRE_TIME);
         cookie.setPath("/");
-        ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes)RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletResponse response = servletRequestAttributes.getResponse();
         response.addCookie(cookie);
 
@@ -186,12 +194,13 @@ public class UserService {
 
     public Resp logout() {
         String token = ThreadLocalUtil.getThreadLocalToken();
-        if(token != null) {
+        if (token != null) {
             // 移除redis缓存
-            redisService.del(RedisService.USER_TOKEN_PREFIX, token);
+            String tokenKey = RedisService.USER_TOKEN_PREFIX + token;
+            redisService.del(tokenKey);
 
             // 移除Cookie
-            ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes)RequestContextHolder.getRequestAttributes();
+            ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             HttpServletResponse response = servletRequestAttributes.getResponse();
             Cookie cookie = new Cookie(Const.COOKIE_TOKEN_NAME, "");
             cookie.setMaxAge(0);
@@ -203,6 +212,7 @@ public class UserService {
 
     /**
      * 生成6位随机数字的字符串
+     *
      * @return
      */
     private String randomCode() {

@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -164,8 +165,7 @@ public class SeckillService {
 
         // 检测成功, 说明秒杀已开始
         // 获得当前的登录用户, 若此时未登录会返回需要登录的error信息, 并在advice包进行异常全局捕获.
-        User loginUser = userService.getUserByToken();
-        Integer userId = loginUser.getId();
+        Integer userId = userService.getUserIdByToken();
 
         // 判断当前用户是否已经秒杀成功? 一人只允许秒杀一件
         String successKey = RedisService.SECKILL_SUCCESS_PREFIX + productId.toString();
