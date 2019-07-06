@@ -48,13 +48,13 @@ public class FlowLimitInterceptor implements HandlerInterceptor {
      * 一个ip在时间区间内最高的请求数
      * -1代表无限制
      */
-    private static final long IP_FLOW_LIMIT_THRESHOLD = 5000;
+    private static final long IP_FLOW_LIMIT_THRESHOLD = 120;
 
     /**
      * 一个用户在时间区间内最高的请求数
      * -1代表无限制
      */
-    private static final long USER_FLOW_LIMIT_THRESHOLD = 5000;
+    private static final long USER_FLOW_LIMIT_THRESHOLD = 120;
 
 
     /**
@@ -67,7 +67,7 @@ public class FlowLimitInterceptor implements HandlerInterceptor {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        // 总流量限制， 对所有ip总流量汇总。保护系统，每秒只能透过限制数量的请求
+        // 总流量限制, 保护系统。
         redisService.setnx(TOTAL_FLOW_LIMIT_KEY, 0, FLOW_LIMIT_TIMEOUT);
         if (redisService.incr(TOTAL_FLOW_LIMIT_KEY) > TOTAL_FLOW_LIMIT_THRESHOLD
                 && TOTAL_FLOW_LIMIT_THRESHOLD > 0) {

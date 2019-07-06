@@ -6,9 +6,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ConvertUtil {
+
     private ConvertUtil() {
     }
 
+    /**
+     * 由字段map转成指定的对象类型
+     * @param map
+     * @param clazz
+     * @param <T>
+     * @return
+     */
     public static <T> T mapToObject(Map<String, Object> map, Class<T> clazz) {
         try {
             return mapToObjectDetail(map, clazz);
@@ -17,6 +25,11 @@ public class ConvertUtil {
         }
     }
 
+    /**
+     * 由对象转成字段map
+     * @param obj
+     * @return
+     */
     public static Map<String, Object> objectToMap(Object obj) {
         try {
             return objectToMapDetail(obj);
@@ -48,7 +61,7 @@ public class ConvertUtil {
 
 
     private static Map<String, Object> objectToMapDetail(Object obj) throws Exception {
-        if(obj == null){
+        if (obj == null) {
             return null;
         }
 
