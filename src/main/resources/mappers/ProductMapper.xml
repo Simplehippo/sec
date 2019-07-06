@@ -229,4 +229,11 @@
     where id = #{productId}
     and stock > 0
   </update>
+
+  <select id="selectAllByPageInfo" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from sec_product
+    limit #{offset}, #{pageSize}
+  </select>
 </mapper>

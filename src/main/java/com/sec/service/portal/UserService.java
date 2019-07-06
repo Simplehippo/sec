@@ -33,6 +33,9 @@ public class UserService {
     @Autowired
     private UserMapper userMapper;
 
+    public static final int CODE_EXPIRE = 120;
+
+
     public User getUserByToken() {
         String tokenVal = ThreadLocalUtil.getThreadLocalToken();
         if(tokenVal == null) {
@@ -57,9 +60,9 @@ public class UserService {
         String email = user.getEmail();
 
         // 避免重复发送验证码
-        String oldCode = redisService.get(redisService.USER_REGISTER_CODE_PREFIX, email, String.class);
+        String oldCode = redisService.get(RedisService.USER_REGISTER_CODE_PREFIX, email, String.class);
         if(StringUtils.isNotBlank(oldCode)) {
-            return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "60秒内不要重复发送验证码");
+            return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), CODE_EXPIRE + "秒内不要重复发送验证码");
         }
 
         // 先查询数据库
@@ -69,13 +72,14 @@ public class UserService {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "该用户已经存在了");
         }
 
-        // todo 放入redis, 缓存60秒
+        // todo 放入redis
         String randomCode = this.randomCode();
-        redisService.set(redisService.USER_REGISTER_CODE_PREFIX, email, randomCode, 60);
+        String key = RedisService.USER_REGISTER_CODE_PREFIX + email;
+        redisService.set(key, randomCode, CODE_EXPIRE);
 
         // todo 发送验证码
         String title = "欢迎注册";
-        String content = String.format("本次验证码: %s   (有效时间60秒)", randomCode);
+        String content = String.format("本次验证码: %s   (有效时间%d秒)", randomCode, CODE_EXPIRE);
         mailService.sendHtmlMail(email, title, content);
 
         return Resp.success(true);
@@ -103,7 +107,7 @@ public class UserService {
         }
 
         // todo 从redis中取出验证码校验
-        String redisDbCode = redisService.get(redisService.USER_REGISTER_CODE_PREFIX, email, String.class);
+        String redisDbCode = redisService.get(RedisService.USER_REGISTER_CODE_PREFIX, email, String.class);
         if(!StringUtils.equalsIgnoreCase(redisDbCode, code)) {
             return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "验证码错误");
         }
@@ -165,7 +169,8 @@ public class UserService {
         if(oldToken != null) {
             redisService.del(RedisService.USER_TOKEN_PREFIX, oldToken);
         }
-        redisService.set(RedisService.USER_TOKEN_PREFIX, token, dbUser);
+        String key = RedisService.USER_TOKEN_PREFIX + token;
+        redisService.set(key, dbUser);
 
         // 写入Cookie
         Cookie cookie = new Cookie(Const.COOKIE_TOKEN_NAME, token);

@@ -36,8 +36,9 @@ public class ShippingController {
     }
 
     @RequestMapping("/list")
-    public Resp list() {
-        return shippingService.list();
+    public Resp list(@RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        return shippingService.list(pageNum, pageSize);
     }
 
 }

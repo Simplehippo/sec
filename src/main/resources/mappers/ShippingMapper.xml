@@ -245,4 +245,12 @@
     from sec_shipping
     where user_id = #{userId}
   </select>
+
+  <select id="selectAllByUserIdAndPageInfo" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from sec_shipping
+    where user_id = #{userId}
+    limit #{offset}, #{pageSize}
+  </select>
 </mapper>

@@ -1,6 +1,5 @@
 package com.sec.controller.rest;
 
-import com.sec.common.Codes;
 import com.sec.common.Resp;
 import com.sec.pojo.User;
 import com.sec.service.portal.UserService;

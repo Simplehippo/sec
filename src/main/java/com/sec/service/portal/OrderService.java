@@ -44,12 +44,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
-
 
     @Autowired
     private UserService userService;
@@ -83,11 +83,14 @@ public class OrderService {
         tradeService = new AlipayTradeServiceImpl.ClientBuilder().setCharset("utf-8").build();
     }
 
+    private static final int ORDER_EXPIRE_TIME = 10 * 60;
+
     public Resp createOrder(Integer userId, Integer productId) {
         log.info("create order -> {} : {}", userId, productId);
 
         // 从redis中获得商品信息, 注意这时候redis中的库存数据是与数据库不一致的, 我们保证最终一致即可
-        Product product = redisService.get(RedisService.SECKILL_PRODUCT_PREFIX, productId.toString(), Product.class);
+        String productKey = RedisService.SECKILL_PRODUCT_PREFIX + productId.toString();
+        Product product = redisService.hmget(productKey, Product.class);
         BigDecimal payment = product.getPrice();
 
         // 生成订单号
@@ -112,7 +115,7 @@ public class OrderService {
         // plus 30m
         Timestamp closeTime = Timestamp.from(
                 LocalDateTime.ofInstant(curTime.toInstant(), ZoneId.systemDefault())
-                .plusMinutes(30)
+                .plusSeconds(ORDER_EXPIRE_TIME)
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
         );
@@ -121,13 +124,18 @@ public class OrderService {
         newOrder.setUpdateTime(curTime);
 
         // 存入数据库
-        orderMapper.insertSelective(newOrder);
+        // orderMapper.insertSelective(newOrder);
+
+        // 创建成功放入缓存中一份， 用于客户端轮询
+        String orderKey = RedisService.SECKILL_ORDER_PREFIX + productId;
+        String hk = String.valueOf(userId);
+        redisService.hput(orderKey, hk, newOrder);
+        redisService.expire(orderKey, product.getEndTime());
 
         // 返回生成的订单号给前端数据
         return Resp.success(orderNo);
     }
 
-    // todo 更新地址信息
     public Resp updateOrder(Long orderNo, Integer shippingId) {
         // 得到登录用户id
         User loginUser = userService.getUserByToken();
@@ -163,10 +171,28 @@ public class OrderService {
         User loginUser = userService.getUserByToken();
         Integer userId = loginUser.getId();
 
-        // 拿出缓存的商品
-        Product product = redisService.get(RedisService.SECKILL_PRODUCT_PREFIX, productId.toString(), Product.class);
-        Timestamp startTime = product.getStartTime();
-        Timestamp endTime = product.getEndTime();
+        // 查看缓存中是否存在订单信息
+        String orderKey = RedisService.SECKILL_ORDER_PREFIX + productId.toString();
+        String hk = String.valueOf(userId);
+        Order cacheOrder = redisService.hget(orderKey, hk, Order.class);
+        if(cacheOrder != null) {
+            Resp.success(cacheOrder);
+        }
+
+        return Resp.error(Codes.ORDER_ERROR.getCode(), "没有此订单");
+
+        /*
+        // 缓存中没有订单信息就查找数据库
+        // 拿出缓存的商品数据，并校验秒杀是否已经结束
+        String productKey = RedisService.SECKILL_PRODUCT_PREFIX + productId.toString();
+        Timestamp startTime = redisService.hget(productKey, "startTime", Timestamp.class);
+        Timestamp endTime = redisService.hget(productKey, "endTime", Timestamp.class);
+        Timestamp curTime = new Timestamp(System.currentTimeMillis());
+        if (curTime.compareTo(startTime) < 0) {
+            return Resp.error(Codes.SERVER_ERR.getCode(), "秒杀未开始");
+        } else if (curTime.compareTo(endTime) > 0) {
+            return Resp.error(Codes.SERVER_ERR.getCode(), "秒杀已结束");
+        }
 
         // 考虑到同一个商品可能会参与多次秒杀活动
         // 查出订单详情需要保证:
@@ -189,6 +215,7 @@ public class OrderService {
         }
 
         return Resp.success(order);
+        */
     }
 
     public Resp getOrderDetail(Long orderNo) {
@@ -245,18 +272,13 @@ public class OrderService {
         // 是基于取消了之后没有了成功信息
         // 主要是为了避免库存多次增加的问题
         // 涉及到redis库存操作的都需要慎重同步
-        String hasSuccess = redisService.get(RedisService.SECKILL_SUCCESS_PREFIX, userId.toString() + productId.toString(), String.class);
-        if(hasSuccess != null) {
-            // todo 简单同步一下
-            synchronized (this) {
-                hasSuccess = redisService.get(RedisService.SECKILL_SUCCESS_PREFIX, userId.toString() + productId.toString(), String.class);
-                if(hasSuccess != null) {
-                    // 将redis该商品id对应的数量+1
-                    redisService.incr(RedisService.SECKILL_STOCK_PREFIX, productId.toString());
-                    // 将redis中此用户下单成功的缓存删除, 即可以让用户继续下单, 接着参与秒杀
-                    redisService.del(RedisService.SECKILL_SUCCESS_PREFIX, userId.toString() + productId.toString());
-                }
-            }
+        // 将redis中此用户下单成功的缓存删除, 即可以让用户继续下单, 接着参与秒杀
+        String successKey = RedisService.SECKILL_SUCCESS_PREFIX + productId.toString();
+        boolean success = redisService.srem(successKey, userId.toString());
+        if(success) {
+            // 将redis该商品id对应的数量+1
+            String productKey = RedisService.SECKILL_PRODUCT_PREFIX + productId.toString();
+            redisService.hincr(productKey, "stock");
         }
 
         return Resp.success();

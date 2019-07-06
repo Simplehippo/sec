@@ -27,4 +27,7 @@ public interface ProductMapper {
                                           @Param("pageSize") Integer pageSize);
 
     int decrementStockById(Integer productId);
+
+    List<Product> selectAllByPageInfo(@Param("offset") Integer offset,
+                                      @Param("pageSize") Integer pageSize);
 }

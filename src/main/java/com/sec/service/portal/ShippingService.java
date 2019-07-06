@@ -89,10 +89,12 @@ public class ShippingService {
         return Resp.error(Codes.ILLEGAL_ARGUMENT.getCode(), "查询地址失败!");
     }
 
-    public Resp list() {
+    public Resp list(Integer pageNum, Integer pageSize) {
         User loginUser = userService.getUserByToken();
         Integer userId = loginUser.getId();
-        List<Shipping> shippingList = shippingMapper.selectByUserId(userId);
+
+        Integer offset = (pageNum - 1) * pageSize;
+        List<Shipping> shippingList = shippingMapper.selectAllByUserIdAndPageInfo(userId, offset, pageSize);
         return Resp.success("查询列表成功!", shippingList);
     }
 }

@@ -59,7 +59,8 @@ public class UserInterceptor implements HandlerInterceptor {
      */
     private void flushTokenExpire(String token, HttpServletResponse response) {
         // 刷新redis中缓存token过期时间
-        redisService.expire(RedisService.USER_TOKEN_PREFIX, token);
+        String key = RedisService.USER_TOKEN_PREFIX + token;
+        redisService.expire(key);
 
         // 刷新Cookie
         Cookie cookie = new Cookie(Const.COOKIE_TOKEN_NAME, token);

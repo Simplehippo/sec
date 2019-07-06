@@ -19,6 +19,12 @@ public class ProductController {
         return productService.getProductDetail(productId);
     }
 
+    @RequestMapping(value = "/list")
+    public Resp list(@RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                     @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        return productService.list(pageNum, pageSize);
+    }
+
     @RequestMapping(value = "/search")
     public Resp list(@RequestParam(value = "keyword", required = false) String keyword,
                                @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,

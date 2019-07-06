@@ -46,4 +46,13 @@ public class ProductService {
         return Resp.success(retProducts);
     }
 
+    public Resp list(Integer pageNum, Integer pageSize) {
+        Integer offset = (pageNum - 1) * pageSize;
+        List<Product> products = productMapper.selectAllByPageInfo(offset, pageSize);
+        List<Product> retProducts = products.stream().map(e -> {
+            e.setImagePrefix(PropertiesUtil.getProperty("ftp.server.http.prefix"));
+            return e;
+        }).collect(Collectors.toList());
+        return Resp.success(retProducts);
+    }
 }

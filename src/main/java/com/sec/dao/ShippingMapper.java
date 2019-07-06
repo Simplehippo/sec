@@ -32,4 +32,8 @@ public interface ShippingMapper {
                                       @Param("shippingId") Integer shippingId);
 
     List<Shipping> selectByUserId(Integer userId);
+
+    List<Shipping> selectAllByUserIdAndPageInfo(@Param("userId") Integer userId,
+                                                @Param("offset") Integer offset,
+                                                @Param("pageSize") Integer pageSize);
 }

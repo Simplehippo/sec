@@ -45,7 +45,8 @@ public class SeckillHandler implements EventHandler {
             new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable r) {
-                    Thread thread = new Thread(r, "seckill handler thread - " + threadNo.getAndIncrement());
+                    int no = threadNo.getAndIncrement();
+                    Thread thread = new Thread(r, String.format("秒杀池核心线程%03d", no));
                     return thread;
                 }
             },
@@ -58,15 +59,15 @@ public class SeckillHandler implements EventHandler {
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                Integer userId = (Integer)params.get("userId");
-                Integer productId = (Integer)params.get("productId");
+                Integer userId = (Integer) params.get("userId");
+                Integer productId = (Integer) params.get("productId");
                 // 在new出来的线程内部, 需要手动事务
                 // 若不明白请自行百度Spring事务生效条件
                 DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
                 definition.setIsolationLevel(TransactionDefinition.ISOLATION_DEFAULT);
                 definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
                 TransactionStatus status = tx.getTransaction(definition);
-                try{
+                try {
                     // 事务作业
                     // 注意这里userId是必要的, 因为在这个线程内部拿不到请求时那个线程的ThreadLocal变量
                     orderService.createOrder(userId, productId); // 生成订单, 不包含配送地址信息
@@ -78,9 +79,12 @@ public class SeckillHandler implements EventHandler {
                     tx.rollback(status);
 
                     // 做一些下单失败的清理和恢复工作
-                    // 将用户成功下单信息删除, 将redis中的库存+1
-                    redisService.del(RedisService.SECKILL_SUCCESS_PREFIX, userId.toString() + productId.toString());
-                    redisService.incr(RedisService.SECKILL_STOCK_PREFIX, String.valueOf(productId));
+                    // 将redis中的库存+1
+                    String productKey = RedisService.SECKILL_PRODUCT_PREFIX + String.valueOf(productId);
+                    redisService.hincr(productKey, "stock");
+                    // 将用户成功下单信息删除
+                    String successKey = RedisService.SECKILL_SUCCESS_PREFIX + productId.toString();
+                    redisService.srem(successKey, userId.toString());
 
                     // 打印失败日志
                     log.info("创建订单失败! userId: {}, productId: {}", userId, productId);
